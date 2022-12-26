@@ -17,6 +17,7 @@ using namespace std;
 
 const int sampleRate = 44100;
 const int bitDepth = 16;
+const int numchan = 16; // Fixed for now 
 
 // Function that reads a file and returns a vector of numbers
 auto read_numbers_from_file(const string& filename) {
@@ -81,8 +82,8 @@ int main() {
     //const int bitDepth = 16;
 
     // Other variables for audio file generation
-    double period = 0.3;
-    int duration = 1;
+    double period = 1.0;
+    int duration = 2;
     int npulse = duration/period;
     ofstream audioFile;
     audioFile.open("waveform.wav", ios::binary);
@@ -91,7 +92,21 @@ int main() {
     SineOscillator sineOscillator2(400, 0.8);
     SineOscillator sineOscillator3(600, 0.8);
     SineOscillator sineOscillator4(800, 0.8);
-    SineOscillator oscillators[] = { sineOscillator, sineOscillator2, sineOscillator3, sineOscillator4 }; 
+    SineOscillator sineOscillator5(1000, 0.8);
+    SineOscillator sineOscillator6(1200, 0.8);
+    SineOscillator sineOscillator7(1400, 0.8);
+    SineOscillator sineOscillator8(1600, 0.8);
+    SineOscillator sineOscillator9(1800, 0.8);
+    SineOscillator sineOscillator10(2000, 0.8);
+    SineOscillator sineOscillator11(2200, 0.8);
+    SineOscillator sineOscillator12(2400, 0.8);
+    SineOscillator sineOscillator13(2600, 0.8);
+    SineOscillator sineOscillator14(2800, 0.8);
+    SineOscillator sineOscillator15(3000, 0.8);
+    SineOscillator sineOscillator16(3200, 0.8);
+
+
+    SineOscillator oscillators[] = { sineOscillator, sineOscillator2, sineOscillator3, sineOscillator4,sineOscillator5, sineOscillator6, sineOscillator7, sineOscillator8,sineOscillator9, sineOscillator10, sineOscillator11, sineOscillator12,sineOscillator13, sineOscillator14, sineOscillator15, sineOscillator16}; 
     // Header chunk
     audioFile << "RIFF";
     audioFile << "----";
@@ -101,7 +116,7 @@ int main() {
     audioFile << "fmt ";
     writeToFile(audioFile, 16, 4); // Size
     writeToFile(audioFile, 1, 2); // Compression code
-    writeToFile(audioFile, 4, 2); // Number of channels
+    writeToFile(audioFile, numchan, 2); // Number of channels
     writeToFile(audioFile, sampleRate, 4); // Sample rate
     writeToFile(audioFile, sampleRate * bitDepth / 8, 4 ); // Byte rate
     writeToFile(audioFile, bitDepth / 8, 2); // Block align
@@ -119,7 +134,7 @@ int main() {
     auto sample = read_numbers_from_file("generated_pulseprofile");
     // 1/63*44100
     int n = sampleRate/sample.size()*period;
-    cout<< sample.size()<<" "<<n<<endl;
+    //cout<< sample.size()<<" "<<n<<endl;
     //Repeat pulse by npulse 
     for (int i = 0; i < npulse; i++) {
         sample.insert(sample.end(), sample.begin(), sample.end());
@@ -136,21 +151,25 @@ int main() {
       upsampledSample.push_back(y);
     }
   }
+  cout<<sampleRate*duration<<endl;
 for (size_t i = 0; i < sampleRate*duration; i++) {
-  int intSamples[] = { 0, 0, 0, 0 };
-  for (size_t j = 0; j < 4; j++) {
-    int tau_dm=100*(4-j)*(4-j); // fake dispersion 
+  int intSamples[numchan];
+  std::fill(intSamples, intSamples + numchan, 0);
+  for (size_t j = 0; j < numchan; j++) {
+    int tau_dm=200*(numchan-j)*(numchan-j); // fake dispersion 
     // cout<<tau_dm<<endl;
     if (i > tau_dm) {
       intSamples[j] = static_cast<int>(upsampledSample[i - tau_dm] * oscillators[j].process() * maxAmplitude);
     } else {
       intSamples[j] = 0;
     }
+  
   }
-  writeToFile(audioFile, intSamples[0], 2);
-  writeToFile(audioFile, intSamples[1], 2);
-  writeToFile(audioFile, intSamples[2], 2);
-  writeToFile(audioFile, intSamples[3], 2);
+  for (int k = 0; k < numchan; k++) {
+  writeToFile(audioFile, intSamples[k], 2);}
+  // writeToFile(audioFile, intSamples[1], 2);
+  // writeToFile(audioFile, intSamples[2], 2);
+  // writeToFile(audioFile, intSamples[3], 2);
 }
 
     int postAudioPosition = audioFile.tellp();
